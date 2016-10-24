@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private NotesService noteService;
 
     private GridView gridView;
+    private FloatingActionButton fab;
+
     private ArrayAdapter<Note> notesAdapter;
 
     @Override
@@ -64,6 +66,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                Note delNote = notesAdapter.getItem(position);
+                new DeleteNoteTask().execute(delNote);
+
+                return true;
+            }
+        });
+
+        fab = (FloatingActionButton)findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                new NewNoteTask().execute();
+            }
+        });
+
         /*plus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,6 +94,14 @@ public class MainActivity extends AppCompatActivity {
         });*/
 
         new LoadAllNotes().execute();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        new LoadAllNotes().execute();
+
+        super.onResume();
     }
 
     @Override
@@ -120,20 +150,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class NewNoteTask extends AsyncTask<Void, Void, Void>
+    class NewNoteTask extends AsyncTask<Void, Void, Note>
     {
         @Override
-        protected Void doInBackground(Void... params)
+        protected Note doInBackground(Void... params)
         {
-            noteService.createNewNote();
+            Note note = noteService.createNewNote();
+
+            return note;
+        }
+
+        @Override
+        protected void onPostExecute(Note note)
+        {
+            Intent editIntent = new Intent(MainActivity.this, EditActivity.class);
+            editIntent.putExtra("NOTE", note);
+
+            startActivity(editIntent);
+        }
+    }
+
+    class DeleteNoteTask extends AsyncTask<Note, Void, ArrayList<Note>>
+    {
+        @Override
+        protected ArrayList<Note> doInBackground(Note... params)
+        {
+            noteService.delete(params[0]);
 
             return null;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid)
+        protected void onPostExecute(ArrayList<Note> allNotes)
         {
-
+            new LoadAllNotes().execute();
         }
     }
 }

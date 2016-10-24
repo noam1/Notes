@@ -29,10 +29,11 @@ public class InternalStorageImplement implements NotesService
     public Note createNewNote()
     {
         String fileName = generateRandomId();
-        try {
-            context.openFileOutput(fileName, Context.MODE_PRIVATE);
+        try
+        {
+            context.openFileOutput(fileName, Context.MODE_PRIVATE).close();
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
         }
 
@@ -50,6 +51,9 @@ public class InternalStorageImplement implements NotesService
             OutputStreamWriter writer = new OutputStreamWriter(outputStream);
 
             writer.write(note.content);
+
+            writer.close();
+            outputStream.close();
         }
         catch (Exception e)
         {
@@ -93,6 +97,10 @@ public class InternalStorageImplement implements NotesService
                 content += line + "\n";
                 line = bufferedReader.readLine();
             }
+
+            inputStream.close();
+            streamReader.close();
+            bufferedReader.close();
         }
         catch (Exception e) {
         }
