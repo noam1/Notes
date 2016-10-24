@@ -2,6 +2,7 @@ package com.example.user.myapplication;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -33,31 +35,43 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Note> notesArrayList;
     private NotesService noteService;
 
+    private GridView gridView;
+    private ArrayAdapter<Note> notesAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ListView notesList=(ListView)findViewById(R.id.notesList);
-        ImageButton plus=(ImageButton)findViewById(R.id.plus_btn);
-        ImageButton minus=(ImageButton)findViewById(R.id.minus_btn);
 
-        ArrayList<Note> notesArrayList  =new ArrayList<>();
-        final ArrayAdapter<Note> notesAdapter = new ArrayAdapter<Note>(this, android.R.layout.simple_list_item_1,  notesArrayList);
-        notesList.setAdapter(notesAdapter);
-        notesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        noteService = new InternalStorageImplement(this);
+
+        gridView = (GridView)findViewById(R.id.grid);
+
+        /*ImageButton plus=(ImageButton)findViewById(R.id.plus_btn);
+        ImageButton minus=(ImageButton)findViewById(R.id.minus_btn);*/
+
+        ArrayList<Note> notesArrayList = new ArrayList<>();
+
+        notesAdapter = new ArrayAdapter<Note>(this, android.R.layout.simple_list_item_1,  notesArrayList);
+
+        gridView.setAdapter(notesAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                notesAdapter.getItem(position);
+                Note note = notesAdapter.getItem(position);
+
+                //TODO: do stuff
             }
         });
 
-        plus.setOnClickListener(new View.OnClickListener() {
+        /*plus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 notesAdapter.add(noteService.createNewNote());
             }
-        });
+        });*/
 
+        new LoadAllNotes().execute();
     }
 
     @Override
@@ -77,38 +91,49 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /*public void createNewNote() throws IOException {
-        File f=getFilesDir();
-        File note=new File(f,generateRandomId()+".txt");
-        note.createNewFile();
+    class LoadAllNotes extends AsyncTask<Void, Void, ArrayList<Note>>
+    {
+        @Override
+        protected ArrayList<Note> doInBackground(Void... params)
+        {
+            ArrayList<String> fileNames = noteService.getNoteNames();
+            ArrayList<Note> allNotes = new ArrayList<>();
+
+            for (String name : fileNames)
+            {
+                Note note = noteService.loadNote(name);
+                allNotes.add(note);
+            }
+
+            return allNotes;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Note> allNotes)
+        {
+            notesAdapter.clear();
+
+            for (Note note : allNotes)
+                notesAdapter.add(note);
+
+            notesAdapter.notifyDataSetChanged();
+        }
     }
 
-    public void editNote(String noteName)
+    class NewNoteTask extends AsyncTask<Void, Void, Void>
     {
-        String a="cpntent";
-        try {
-            FileOutputStream fileOutputStream= openFileOutput(noteName,MODE_PRIVATE);
-            fileOutputStream.write(a.getBytes());
-            fileOutputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        @Override
+        protected Void doInBackground(Void... params)
+        {
+            noteService.createNewNote();
+
+            return null;
         }
 
-    }*/
+        @Override
+        protected void onPostExecute(Void aVoid)
+        {
 
-
-
-/*
-    public boolean fileExists(String fileName)
-    {
-        String[] files = fileList();
-        for (String file : files) {
-            if (file.equals(fileName)) {
-                return true;
-            }
         }
-        return false;
-    }*/
+    }
 }

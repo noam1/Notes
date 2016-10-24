@@ -2,6 +2,7 @@ package com.example.user.myapplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,6 +12,7 @@ public interface NotesService {
 
     public Note createNewNote();
     public void updateNote(Note note);
-    public List<Note> retrieve();
-
+    public ArrayList<String> getNoteNames();
+    Note loadNote(String fileName);
+    void delete(Note note);
 }

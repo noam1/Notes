@@ -7,12 +7,12 @@ public class Note
 {
     String title;
     String content;
-    String id;
+    String fileName;
 
-    public Note(String title, String content, String id) {
+    public Note(String title, String content, String fileName) {
         this.title = title;
         this.content = content;
-        this.id = id;
+        this.fileName = fileName;
     }
 
     public String getTitle() {
@@ -31,11 +31,16 @@ public class Note
         this.content = content;
     }
 
-    public String getId() {
-        return id;
+    public String getFileName() {
+        return fileName;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }

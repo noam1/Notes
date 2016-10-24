@@ -2,9 +2,15 @@ package com.example.user.myapplication;
 
 import android.content.Context;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -12,36 +18,98 @@ import java.util.Random;
  */
 public class InternalStorageImplement implements NotesService
 {
+    private Context context;
 
-    Context context;
+    public InternalStorageImplement(Context context)
+    {
+        this.context = context;
+    }
+
     @Override
-    public Note createNewNote() {
-        File f=context.getFilesDir();
-        File note=new File(f,generateRandomId()+".txt");
+    public Note createNewNote()
+    {
+        String fileName = generateRandomId();
         try {
-            note.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
+            context.openFileOutput(fileName, Context.MODE_PRIVATE);
         }
-        Note note1=new Note("","",note.getName());
-        return note1;
+        catch (FileNotFoundException e)
+        {
+        }
+
+        Note note = new Note("", "", fileName);
+
+        return note;
     }
 
     @Override
-    public void updateNote(Note note) {
+    public void updateNote(Note note)
+    {
+        try
+        {
+            FileOutputStream outputStream = context.openFileOutput(note.getFileName(), Context.MODE_PRIVATE);
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream);
 
-
+            writer.write(note.content);
+        }
+        catch (Exception e)
+        {
+        }
     }
 
     @Override
-    public List<Note> retrieve() {
-        return null;
+    public ArrayList<String> getNoteNames()
+    {
+        ArrayList<String> result = new ArrayList<>();
+        String[] fileNames = context.fileList();
+
+        for (String name : fileNames)
+        {
+            if (!name.startsWith("NOTE"))
+                continue;
+
+            result.add(name);
+        }
+
+        return result;
     }
 
-    public String generateRandomId(){
+    @Override
+    public Note loadNote(String fileName)
+    {
+        String content = "";
+        String title = "";
+
+        try
+        {
+            FileInputStream inputStream = context.openFileInput(fileName);
+            InputStreamReader streamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(streamReader);
+
+            String line = bufferedReader.readLine();
+            title = new String(line);
+
+            while (line != null)
+            {
+                content += line + "\n";
+                line = bufferedReader.readLine();
+            }
+        }
+        catch (Exception e) {
+        }
+
+        return new Note(title, content, fileName);
+    }
+
+    @Override
+    public void delete(Note note)
+    {
+        context.deleteFile(note.getFileName());
+    }
+
+    private String generateRandomId(){
         Random rnd = new Random();
         char[] characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
-        String id = "";
+        String id = "NOTE";
         for (int i = 0; i < 20; i++){
             id += characters[rnd.nextInt(characters.length)];
         }
